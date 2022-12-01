@@ -1,0 +1,131 @@
+---
+title: "International sales evaluation"
+author: "Josep Peiro Ramos"
+date: "1/12/2022"
+params:
+  lang: ES
+lang: "`r switch(params$lang, ES = 'es-ES', EN = 'en-US')`"
+
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+    number_sections: yes
+  html_notebook:
+    echo: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    echo: yes
+    number_sections: yes
+    theme: lumen
+    toc: yes
+language:
+  label:
+    fig: 'Figura '
+    tab: 'Tabla '
+    eq: 'Ecuación '
+    thm: 'Teorema '
+    lem: 'Lema '
+    def: 'Definición '
+    cor: 'Corolario '
+    prp: 'Proposición '
+    exm: 'Ejemplo '
+    exr: 'Ejercicio '
+    proof: 'Demostración. '
+    remark: 'Nota: '
+    solution: 'Solución. '
+---
+
+<style>
+#TOC {
+  color: #708090;
+  font-family: Calibri;
+  font-size: 16px; 
+  border-color: #708091;
+}
+h1.title {
+  color: #F08080;
+  background-color: #F5F5F5;
+  font-family: Calibri;
+}
+h4.author{
+  color: #708090;
+  font-family: Calibri;
+}
+h4.date{
+  color: #708090;
+  font-family: Calibri;
+  font-size: 16px;
+  background-color: #F5F5F5;
+}
+body {
+  color: #708090;
+  font-family: Calibri;
+  background-color: #F5F5F5;
+}
+pre {
+  color: #708090;
+  background-color: #F8F8FF;
+}
+</style>
+
+```{r setup, cache = F, echo = F, message = F, warning = F, tidy = F}
+
+# Settings
+library(knitr)
+options(width = 100)
+# General options for chunks
+opts_chunk$set(echo=T,message = F, error = F, warning = F, comment = NA, fig.align = 'center', dpi = 100, tidy = F, cache.path = '.cache/', fig.path = './figure/')
+
+#options(xtable.type = 'html')
+knit_hooks$set(inline = function(x) {
+  
+  if(is.numeric(x)) {
+    round(x, getOption('digits'))
+  } else {
+    paste(as.character(x), collapse = ', ')
+  }
+})
+#knit_hooks$set(plot = knitr:::hook_plot_html)
+```
+
+```{r, include = FALSE}
+packages = c("MASS","knitr","tidyverse", "readr", "ggplot2", "dplyr", "magrittr", "plotly")
+
+#use this function to check if each package is on the local machine
+#if a package is installed, it will be loaded
+#if any are not, the missing package(s) will be installed and loaded
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }
+})
+
+#verify they are loaded
+search()
+```
+
+```{r}
+supplies = read_csv("data/office_supplies.csv")
+colnames(supplies)
+supplies %<>% rename(c("Order_ID" = "Order ID", "Order_Date"="Order Date",
+                       "Ship_Mode"="Ship Mode", "Product_ID"="Product ID",
+                       "Product_Name"="Product Name", 
+                       "Sub_Category"="Sub-Category")) %>% 
+  mutate(Order_Date = as.Date(Order_Date))
+colnames(supplies)
+```
+
+```{r}
+class(supplies$Order_Date)
+supplies %>%
+  group_by(as.numeric(format(Order_Date,'%Y'))) %>%
+  do(
+    plot = plot_ly(data = ., x=~Order_Date, y=~Sales) %>%
+      add_lines(name = ~as.numeric(format(Order_Date,'%Y')))
+  ) %>%
+  subplot(nrows = 3, shareY = F, shareX = F)
+```
+
